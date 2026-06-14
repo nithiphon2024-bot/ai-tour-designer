@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Tour Designer v3</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700;900&family=Playfair+Display:wght@700;900&display=swap');
+:root{
+  --bg:#0b0c10;--surface:#13141a;--surface2:#1c1e27;--border:#252836;
+  --gold:#e8c97a;--gold2:#c9a84c;--glow:rgba(232,201,122,0.12);
+  --text:#f0ede6;--muted:#7a7890;--dim:#4a4860;
+  --accent:#6ab4ff;--green:#5dcba3;--red:#ff6b6b;--purple:#a07af0;--orange:#ff9f6b;
+  --r:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Noto Sans Thai',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+
+.hdr{padding:14px 22px;display:flex;align-items:center;gap:11px;border-bottom:1px solid var(--border);background:rgba(11,12,16,0.97);position:sticky;top:0;z-index:200;backdrop-filter:blur(14px);}
+.hdr-logo{width:32px;height:32px;background:linear-gradient(135deg,var(--gold),var(--gold2));border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;}
+.hdr-name{font-family:'Playfair Display',serif;font-size:17px;font-weight:700;background:linear-gradient(135deg,var(--gold),#f5e0b0);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.hdr-sub{font-size:10px;color:var(--muted);}
+.hdr-badge{margin-left:auto;background:var(--glow);border:1px solid rgba(232,201,122,0.25);color:var(--gold);font-size:9px;font-weight:700;letter-spacing:1px;padding:3px 9px;border-radius:20px;}
+
+.layout{display:grid;grid-template-columns:380px 1fr;min-height:calc(100vh - 57px);}
+@media(max-width:860px){.layout{grid-template-columns:1fr;}}
+
+/* LEFT */
+.cfg{background:var(--surface);border-right:1px solid var(--border);padding:18px;overflow-y:auto;max-height:calc(100vh - 57px);}
+.cfg-heading{font-size:10px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:16px;}
+.sec{margin-bottom:20px;}
+.lbl{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.9px;margin-bottom:9px;display:flex;align-items:center;gap:6px;}
+.lbl-badge{background:rgba(93,203,163,0.12);border:1px solid rgba(93,203,163,0.25);color:var(--green);font-size:9px;padding:2px 7px;border-radius:10px;font-weight:600;}
+
+/* Country */
+.cg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+.cb{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:8px 4px;text-align:center;cursor:pointer;transition:all .17s;font-size:10px;color:var(--muted);font-family:'Noto Sans Thai',sans-serif;}
+.cb .f{font-size:18px;display:block;margin-bottom:3px;}
+.cb:hover{border-color:var(--gold2);color:var(--text);}
+.cb.sel{border-color:var(--gold);background:var(--glow);color:var(--gold);}
+
+/* Cities */
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;}
+.chip{background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:5px 10px;font-size:11.5px;color:var(--muted);cursor:pointer;transition:all .17s;font-family:'Noto Sans Thai',sans-serif;}
+.chip:hover{border-color:var(--gold2);color:var(--text);}
+.chip.sel{border-color:var(--gold);background:var(--glow);color:var(--gold);}
+
+/* Custom places */
+.custom-area{background:rgba(160,122,240,0.05);border:1px solid rgba(160,122,240,0.18);border-radius:11px;padding:13px;margin-top:4px;}
+.custom-area-title{font-size:11px;font-weight:700;color:var(--purple);margin-bottom:8px;display:flex;align-items:center;gap:5px;}
+.custom-row{display:flex;gap:7px;margin-bottom:8px;}
+.custom-inp{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 11px;font-size:12.5px;color:var(--text);font-family:'Noto Sans Thai',sans-serif;outline:none;transition:border-color .17s;}
+.custom-inp:focus{border-color:var(--purple);}
+.custom-inp::placeholder{color:var(--dim);}
+.add-btn{background:rgba(160,122,240,0.15);border:1px solid rgba(160,122,240,0.3);border-radius:8px;padding:8px 13px;color:var(--purple);font-size:12px;cursor:pointer;font-family:'Noto Sans Thai',sans-serif;white-space:nowrap;transition:all .17s;}
+.add-btn:hover{background:rgba(160,122,240,0.25);}
+.ctags{display:flex;flex-wrap:wrap;gap:5px;}
+.ctag{background:rgba(160,122,240,0.1);border:1px solid rgba(160,122,240,0.25);border-radius:7px;padding:4px 9px;font-size:11.5px;color:var(--purple);display:flex;align-items:center;gap:5px;}
+.ctag .rm{cursor:pointer;opacity:.55;font-size:10px;}
+.ctag .rm:hover{opacity:1;}
+.custom-hint{font-size:10.5px;color:var(--dim);margin-top:6px;line-height:1.5;}
+
+/* Duration */
+.dur-row{display:flex;gap:6px;}
+.db{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:8px 3px;text-align:center;cursor:pointer;font-size:12.5px;font-weight:600;color:var(--muted);transition:all .17s;font-family:'Noto Sans Thai',sans-serif;}
+.db span{display:block;font-size:9.5px;font-weight:400;margin-top:1px;}
+.db:hover{border-color:var(--gold2);color:var(--text);}
+.db.sel{border-color:var(--gold);background:var(--glow);color:var(--gold);}
+
+/* Budget */
+.bdg-card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:9px;}
+.bdg-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;}
+.bdg-num{font-size:24px;font-weight:700;color:var(--gold);font-family:'Playfair Display',serif;line-height:1;}
+.bdg-unit{font-size:10px;color:var(--muted);margin-top:2px;}
+.bdg-tier-badge{font-size:10px;padding:3px 9px;border-radius:20px;font-weight:700;}
+.bdg-breakdown{display:grid;grid-template-columns:1fr 1fr;gap:5px;}
+.bdg-row{display:flex;justify-content:space-between;align-items:center;font-size:10.5px;padding:3px 0;}
+.bdg-row-l{color:var(--dim);}
+.bdg-row-r{color:var(--muted);font-weight:600;}
+input[type=range]{width:100%;-webkit-appearance:none;height:4px;border-radius:2px;background:var(--border);outline:none;margin-bottom:3px;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--gold);cursor:pointer;box-shadow:0 0 7px rgba(232,201,122,.4);}
+
+/* Budget alert inline */
+.bdg-alert{background:rgba(255,107,107,0.07);border:1px solid rgba(255,107,107,0.2);border-radius:9px;padding:10px 12px;margin-top:9px;font-size:11px;color:var(--red);line-height:1.5;display:none;}
+.bdg-alert.show{display:block;}
+.bdg-sug-inline{margin-top:8px;display:flex;flex-direction:column;gap:5px;}
+.bsi{background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:8px 10px;display:flex;justify-content:space-between;align-items:center;gap:8px;cursor:pointer;transition:border-color .17s;}
+.bsi:hover{border-color:var(--gold2);}
+.bsi-l{font-size:11px;color:var(--text);}
+.bsi-save{font-size:11.5px;font-weight:700;color:var(--green);white-space:nowrap;}
+.bsi-apply{font-size:10px;background:var(--glow);border:1px solid rgba(232,201,122,.2);border-radius:6px;padding:3px 8px;color:var(--gold);cursor:pointer;white-space:nowrap;font-family:'Noto Sans Thai',sans-serif;}
+
+/* Hotel */
+.grades{display:flex;gap:6px;}
+.gb{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:8px 3px;text-align:center;cursor:pointer;transition:all .17s;}
+.gb .st{font-size:9.5px;color:var(--gold2);display:block;margin-bottom:2px;}
+.gb .gl{font-size:9.5px;color:var(--muted);}
+.gb:hover{border-color:var(--gold2);}
+.gb.sel{border-color:var(--gold);background:var(--glow);}
+.gb.sel .gl{color:var(--gold);}
+
+/* Style tags ENHANCED */
+.style-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.stag{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:8px 10px;cursor:pointer;transition:all .17s;font-family:'Noto Sans Thai',sans-serif;}
+.stag:hover{border-color:var(--gold2);}
+.stag.sel{border-color:var(--gold);background:var(--glow);}
+.stag-row{display:flex;align-items:center;gap:7px;}
+.stag-icon{font-size:15px;}
+.stag-name{font-size:11.5px;font-weight:600;color:var(--muted);}
+.stag-sub{font-size:9.5px;color:var(--dim);margin-top:1px;}
+.stag.sel .stag-name{color:var(--gold);}
+.stag.sel .stag-sub{color:rgba(232,201,122,.55);}
+
+/* Style spot preview cards — NEW */
+.spot-preview{margin-top:10px;display:none;}
+.spot-preview.show{display:block;}
+.sp-header{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;margin-bottom:8px;display:flex;align-items:center;gap:5px;}
+.sp-grid{display:flex;flex-direction:column;gap:5px;}
+.sp-cat{background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:9px 11px;}
+.sp-cat-name{font-size:9.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;}
+.sp-items{display:flex;flex-direction:column;gap:3px;}
+.sp-item{font-size:11.5px;color:var(--text);display:flex;align-items:flex-start;gap:6px;line-height:1.4;}
+.sp-item-dot{color:var(--gold2);flex-shrink:0;font-size:9px;margin-top:3px;}
+.sp-item-note{font-size:10px;color:var(--dim);}
+
+/* Gen btn */
+.gen{width:100%;background:linear-gradient(135deg,var(--gold),var(--gold2));border:none;border-radius:12px;padding:14px;font-size:13.5px;font-weight:700;color:#0b0c10;cursor:pointer;transition:all .25s;font-family:'Noto Sans Thai',sans-serif;display:flex;align-items:center;justify-content:center;gap:7px;margin-top:4px;}
+.gen:hover{transform:translateY(-2px);box-shadow:0 7px 20px rgba(232,201,122,.3);}
+.gen:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none;}
+
+.tip{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-top:12px;font-size:11px;color:var(--muted);line-height:1.6;}
+.tip b{color:var(--gold);}
+
+/* RIGHT */
+.res{background:var(--bg);overflow-y:auto;max-height:calc(100vh - 57px);}
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;min-height:400px;text-align:center;padding:40px;color:var(--dim);}
+.empty-ico{font-size:52px;margin-bottom:16px;opacity:.35;}
+.empty-t{font-size:16px;color:var(--muted);margin-bottom:6px;}
+.empty-d{font-size:12.5px;color:var(--dim);line-height:1.7;}
+
+.loading{display:none;flex-direction:column;align-items:center;justify-content:center;height:100%;min-height:400px;padding:40px;text-align:center;}
+.lp{font-size:44px;animation:fly 2s ease-in-out infinite;margin-bottom:20px;}
+@keyframes fly{0%,100%{transform:translateY(0) rotate(-5deg);}50%{transform:translateY(-12px) rotate(5deg);}}
+.lt{font-size:14px;color:var(--muted);margin-bottom:5px;}
+.ls{font-size:11.5px;color:var(--dim);}
+.lb{width:190px;height:3px;background:var(--border);border-radius:2px;margin-top:16px;overflow:hidden;}
+.lf{height:100%;background:linear-gradient(90deg,var(--gold2),var(--gold));border-radius:2px;animation:ld 2.4s ease-in-out infinite;}
+@keyframes ld{0%{width:0%;}80%{width:90%;}100%{width:100%;}}
+
+.errbox{background:rgba(255,107,107,.07);border:1px solid rgba(255,107,107,.2);border-radius:10px;padding:14px;color:var(--red);font-size:12.5px;margin:20px;display:none;}
+.rc{display:none;padding:22px;}
+
+/* Trip header */
+.trip-hdr{background:linear-gradient(135deg,#1a1608,var(--surface) 65%);border:1px solid rgba(232,201,122,.2);border-radius:var(--r);padding:20px;margin-bottom:18px;position:relative;overflow:hidden;}
+.trip-hdr::before{content:'';position:absolute;top:-35px;right:-35px;width:150px;height:150px;background:radial-gradient(circle,rgba(232,201,122,.07),transparent 70%);border-radius:50%;}
+.trip-flag{font-size:32px;margin-bottom:6px;display:block;}
+.trip-title{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--gold);margin-bottom:4px;}
+.trip-summary{font-size:12.5px;color:var(--muted);line-height:1.6;}
+.trip-meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:11px;}
+.tm{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:7px;padding:5px 11px;font-size:11px;color:var(--muted);display:flex;align-items:center;gap:4px;}
+.tm strong{color:var(--text);}
+
+/* Budget panel */
+.bpanel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px;margin-bottom:18px;}
+.bpanel-title{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:13px;}
+.cr{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;padding:5px 0;}
+.cr-l{color:var(--muted);display:flex;align-items:center;gap:6px;}
+.cr-r{font-weight:600;color:var(--text);}
+.cdiv{height:1px;background:var(--border);margin:9px 0;}
+.ctot{display:flex;justify-content:space-between;align-items:center;margin-bottom:13px;}
+.ctot-l{font-size:13.5px;font-weight:700;color:var(--text);}
+.ctot-r{font-size:21px;font-weight:700;font-family:'Playfair Display',serif;color:var(--gold);}
+.bbar-wrap{margin-bottom:13px;}
+.bbar-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--dim);margin-bottom:4px;}
+.bbar-track{height:7px;background:var(--border);border-radius:4px;overflow:hidden;}
+.bbar-fill{height:100%;border-radius:4px;transition:width 1s ease;}
+.smart-box{border-radius:11px;padding:14px;margin-top:3px;}
+.smart-box.warn{background:rgba(255,107,107,.06);border:1px solid rgba(255,107,107,.18);}
+.smart-box.ok{background:rgba(93,203,163,.06);border:1px solid rgba(93,203,163,.18);}
+.smart-hdr{font-size:12.5px;font-weight:700;margin-bottom:11px;}
+.smart-hdr.warn{color:var(--red);}
+.smart-hdr.ok{color:var(--green);}
+.sugs{display:flex;flex-direction:column;gap:7px;}
+.sug{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:9px;padding:11px 13px;display:flex;justify-content:space-between;align-items:center;gap:9px;}
+.sug-a{font-size:11.5px;font-weight:600;color:var(--text);margin-bottom:3px;}
+.sug-d{font-size:10.5px;color:var(--muted);line-height:1.5;}
+.sug-r{display:flex;gap:7px;align-items:center;flex-shrink:0;}
+.sug-save{font-size:12.5px;font-weight:700;color:var(--green);}
+.sug-btn{background:var(--glow);border:1px solid rgba(232,201,122,.22);border-radius:6px;padding:4px 10px;font-size:10.5px;color:var(--gold);cursor:pointer;font-family:'Noto Sans Thai',sans-serif;}
+.sug-btn:hover{background:rgba(232,201,122,.2);}
+
+/* Style spots in result */
+.ssbox{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:15px;margin-bottom:18px;}
+.ssbox-title{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:11px;}
+.ss-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px;}
+.ss-card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px;}
+.ss-cat{font-size:9.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;}
+.ss-item{font-size:11.5px;color:var(--text);display:flex;align-items:flex-start;gap:5px;margin-bottom:3px;line-height:1.4;}
+.ss-note{font-size:10px;color:var(--dim);}
+
+/* Custom spots result */
+.csbox{background:rgba(160,122,240,.05);border:1px solid rgba(160,122,240,.2);border-radius:10px;padding:12px;margin-bottom:18px;}
+.csbox-t{font-size:10px;font-weight:700;color:var(--purple);margin-bottom:7px;}
+.cslist{display:flex;flex-wrap:wrap;gap:6px;}
+.csitem{background:rgba(160,122,240,.1);border:1px solid rgba(160,122,240,.22);border-radius:7px;padding:4px 10px;font-size:11.5px;color:var(--purple);}
+
+/* Day cards */
+.daysec-t{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;}
+.day-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:11px;overflow:hidden;transition:border-color .17s;}
+.day-card:hover{border-color:rgba(232,201,122,.23);}
+.day-hdr{display:flex;align-items:center;gap:12px;padding:14px 17px;cursor:pointer;user-select:none;}
+.day-num{width:34px;height:34px;background:linear-gradient(135deg,var(--gold),var(--gold2));border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:12.5px;color:#0b0c10;flex-shrink:0;font-family:'Playfair Display',serif;}
+.day-info{flex:1;}
+.day-city{font-size:13.5px;font-weight:700;color:var(--text);}
+.day-theme{font-size:11px;color:var(--muted);margin-top:2px;}
+.day-tog{font-size:12px;color:var(--dim);transition:transform .2s;}
+.day-tog.open{transform:rotate(180deg);}
+.day-body{padding:0 17px 14px;display:none;}
+.day-body.open{display:block;}
+
+/* Timeline */
+.tl{position:relative;padding-left:24px;}
+.tl::before{content:'';position:absolute;left:5px;top:8px;bottom:8px;width:1px;background:linear-gradient(to bottom,var(--gold2),var(--border));}
+.tl-item{position:relative;margin-bottom:12px;}
+.tl-dot{position:absolute;left:-19px;top:4px;width:8px;height:8px;border-radius:50%;background:var(--gold2);border:2px solid var(--bg);}
+.tl-dot.hotel{background:var(--accent);}
+.tl-dot.food{background:var(--green);}
+.tl-dot.transport{background:var(--purple);}
+.tl-dot.custom{background:var(--orange);}
+.tl-time{font-size:10px;color:var(--dim);margin-bottom:1px;}
+.tl-name{font-size:12.5px;font-weight:600;color:var(--text);margin-bottom:2px;}
+.tl-desc{font-size:11px;color:var(--muted);line-height:1.55;}
+.tl-tip{font-size:10.5px;color:var(--gold2);margin-top:3px;}
+.tl-tags{display:flex;gap:4px;margin-top:4px;flex-wrap:wrap;}
+.tt{font-size:9.5px;padding:2px 7px;border-radius:5px;font-weight:600;}
+.tt-spot{background:rgba(232,201,122,.1);color:var(--gold2);}
+.tt-food{background:rgba(93,203,163,.1);color:var(--green);}
+.tt-hotel{background:rgba(106,180,255,.1);color:var(--accent);}
+.tt-transport{background:rgba(160,122,240,.1);color:var(--purple);}
+.tt-custom{background:rgba(255,159,107,.12);color:var(--orange);}
+
+.hotel-card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;margin-top:8px;display:flex;gap:10px;align-items:flex-start;}
+.hotel-em{font-size:20px;flex-shrink:0;}
+.hotel-name{font-size:12.5px;font-weight:700;color:var(--text);margin-bottom:2px;}
+.hotel-st{font-size:10px;color:var(--gold2);margin-bottom:2px;}
+.hotel-meta{font-size:10.5px;color:var(--muted);}
+.hotel-price{margin-left:auto;text-align:right;flex-shrink:0;}
+.hotel-pnum{font-size:13.5px;font-weight:700;color:var(--gold);}
+.hotel-plbl{font-size:9.5px;color:var(--dim);}
+
+.action-bar{display:flex;gap:8px;margin-top:20px;flex-wrap:wrap;}
+.abtn{flex:1;min-width:100px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 13px;font-size:12.5px;font-weight:600;color:var(--text);cursor:pointer;transition:all .17s;display:flex;align-items:center;justify-content:center;gap:6px;font-family:'Noto Sans Thai',sans-serif;}
+.abtn:hover{border-color:var(--gold2);color:var(--gold);}
+.abtn.primary{background:linear-gradient(135deg,var(--gold),var(--gold2));border-color:transparent;color:#0b0c10;}
+.abtn.primary:hover{transform:translateY(-1px);box-shadow:0 4px 13px rgba(232,201,122,.27);}
+
+::-webkit-scrollbar{width:5px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="hdr-logo">✈️</div>
+  <div>
+    <div class="hdr-name">AI Tour Designer</div>
+    <div class="hdr-sub">สร้างทริปได้ภายใน 60 วินาที</div>
+  </div>
+  <div class="hdr-badge">v3.0</div>
+</header>
+
+<div class="layout">
+
+<!-- ═══════ LEFT ═══════ -->
+<aside class="cfg">
+  <div class="cfg-heading">🗺️ ออกแบบทริปของคุณ</div>
+
+  <!-- COUNTRY -->
+  <div class="sec">
+    <label class="lbl">🌍 ปลายทาง</label>
+    <div class="cg">
+      <div class="cb" onclick="selC(this,'japan')"><span class="f">🇯🇵</span>ญี่ปุ่น</div>
+      <div class="cb" onclick="selC(this,'korea')"><span class="f">🇰🇷</span>เกาหลี</div>
+      <div class="cb" onclick="selC(this,'europe')"><span class="f">🇫🇷</span>ยุโรป</div>
+      <div class="cb" onclick="selC(this,'taiwan')"><span class="f">🇹🇼</span>ไต้หวัน</div>
+      <div class="cb" onclick="selC(this,'singapore')"><span class="f">🇸🇬</span>สิงคโปร์</div>
+      <div class="cb" onclick="selC(this,'thailand')"><span class="f">🇹🇭</span>ไทย</div>
+    </div>
+  </div>
+
+  <!-- CITIES -->
+  <div class="sec" id="city-sec" style="display:none;">
+    <label class="lbl">🏙️ เมืองที่อยากไป <span style="color:var(--dim);font-size:9px;text-transform:none;letter-spacing:0;">(เลือกได้หลายเมือง)</span></label>
+    <div class="chips" id="city-chips"></div>
+  </div>
+
+  <!-- CUSTOM PLACES — NEW ENHANCED -->
+  <div class="sec" id="custom-sec" style="display:none;">
+    <label class="lbl">📍 สถานที่ที่อยากไปเป็นพิเศษ <span class="lbl-badge">NEW</span></label>
+    <div class="custom-area">
+      <div class="custom-area-title">✏️ เพิ่มสถานที่ของคุณเอง</div>
+      <div class="custom-row">
+        <input class="custom-inp" id="custom-inp" placeholder="เช่น วัดพระแก้ว, Shibuya Crossing, ร้าน Ichiran Ramen…" />
+        <button class="add-btn" onclick="addCustom()">+ เพิ่ม</button>
+      </div>
+      <div class="ctags" id="ctags"></div>
+      <div class="custom-hint">💡 AI จะรวมสถานที่ที่คุณเพิ่มในโปรแกรมทริปโดยอัตโนมัติ สามารถใส่ได้หลายแห่ง</div>
+    </div>
+  </div>
+
+  <!-- DURATION -->
+  <div class="sec">
+    <label class="lbl">📅 จำนวนวัน</label>
+    <div class="dur-row">
+      <div class="db" onclick="selD(this,5)">5<span>วัน</span></div>
+      <div class="db" onclick="selD(this,7)">7<span>วัน</span></div>
+      <div class="db" onclick="selD(this,10)">10<span>วัน</span></div>
+      <div class="db" onclick="selD(this,14)">14<span>วัน</span></div>
+    </div>
+  </div>
+
+  <!-- BUDGET — ENHANCED with real-time breakdown -->
+  <div class="sec">
+    <label class="lbl">💰 งบประมาณ/คน</label>
+    <div class="bdg-card">
+      <div class="bdg-top">
+        <div>
+          <div class="bdg-num" id="bdg-num">50,000</div>
+          <div class="bdg-unit">บาทต่อคน</div>
+        </div>
+        <div class="bdg-tier-badge" id="bdg-tier" style="background:rgba(93,203,163,.12);border:1px solid rgba(93,203,163,.25);color:var(--green);">ระดับกลาง</div>
+      </div>
+      <input type="range" id="bdg-slider" min="15000" max="200000" step="5000" value="50000" oninput="updateBdg(this.value)">
+      <div style="display:flex;justify-content:space-between;font-size:9.5px;color:var(--dim);margin-bottom:10px;">
+        <span>15,000</span><span>200,000+</span>
+      </div>
+      <!-- Real-time breakdown -->
+      <div id="bdg-breakdown" style="display:none;">
+        <div style="font-size:9.5px;color:var(--dim);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">ประมาณค่าใช้จ่ายจริง</div>
+        <div class="bdg-breakdown" id="bdg-rows"></div>
+      </div>
+    </div>
+    <!-- Budget warning inline -->
+    <div class="bdg-alert" id="bdg-alert">
+      <div id="bdg-alert-msg"></div>
+      <div class="bdg-sug-inline" id="bdg-sugs-inline"></div>
+    </div>
+  </div>
+
+  <!-- HOTEL -->
+  <div class="sec">
+    <label class="lbl">🏨 เกรดโรงแรม</label>
+    <div class="grades">
+      <div class="gb" onclick="selG(this,3)"><span class="st">⭐⭐⭐</span><span class="gl">3 ดาว</span></div>
+      <div class="gb" onclick="selG(this,4)"><span class="st">⭐⭐⭐⭐</span><span class="gl">4 ดาว</span></div>
+      <div class="gb" onclick="selG(this,5)"><span class="st">⭐⭐⭐⭐⭐</span><span class="gl">5 ดาว</span></div>
+    </div>
+  </div>
+
+  <!-- STYLE — WITH INSTANT SPOT PREVIEW -->
+  <div class="sec">
+    <label class="lbl">🎨 สไตล์การเที่ยว <span style="color:var(--dim);font-size:9px;text-transform:none;letter-spacing:0;">(เลือกได้หลายอย่าง)</span></label>
+    <div class="style-grid">
+      <div class="stag" onclick="togS(this,'food')">
+        <div class="stag-row"><span class="stag-icon">🍜</span><div><div class="stag-name">อาหาร/กิน</div><div class="stag-sub">ตลาด ร้านดัง street food</div></div></div>
+      </div>
+      <div class="stag" onclick="togS(this,'cafe')">
+        <div class="stag-row"><span class="stag-icon">☕</span><div><div class="stag-name">คาเฟ่</div><div class="stag-sub">ร้านกาแฟ photo spot</div></div></div>
+      </div>
+      <div class="stag" onclick="togS(this,'temple')">
+        <div class="stag-row"><span class="stag-icon">⛩️</span><div><div class="stag-name">วัด/ศาสนสถาน</div><div class="stag-sub">วัดดัง shrine ประวัติศาสตร์</div></div></div>
+      </div>
+      <div class="stag" onclick="togS(this,'nature')">
+        <div class="stag-row"><span class="stag-icon">🌿</span><div><div class="stag-name">ธรรมชาติ</div><div class="stag-sub">ทะเล ภูเขา อุทยาน</div></div></div>
+      </div>
+      <div class="stag" onclick="togS(this,'shopping')">
+        <div class="stag-row"><span class="stag-icon">🛍️</span><div><div class="stag-name">ช้อปปิ้ง</div><div class="stag-sub">ห้าง ตลาด ของที่ระลึก</div></div></div>
+      </div>
+      <div class="stag" onclick="togS(this,'culture')">
+        <div class="stag-row"><span class="stag-icon">🏛️</span><div><div class="stag-name">วัฒนธรรม</div><div class="stag-sub">พิพิธภัณฑ์ ศิลปะ</div></div></div>
+      </div>
+      <div class="stag" onclick="togS(this,'luxury')">
+        <div class="stag-row"><span class="stag-icon">💎</span><div><div class="stag-name">Luxury</div><div class="stag-sub">Fine dining สปา exclusive</div></div></div>
+      </div>
+      <div class="stag" onclick="togS(this,'adventure')">
+        <div class="stag-row"><span class="stag-icon">🏔️</span><div><div class="stag-name">Adventure</div><div class="stag-sub">Hiking outdoor activities</div></div></div>
+      </div>
+    </div>
+    <!-- Instant spot preview -->
+    <div class="spot-preview" id="spot-preview">
+      <div class="sp-header">📍 สถานที่แนะนำตามสไตล์ที่เลือก</div>
+      <div class="sp-grid" id="sp-grid"></div>
+    </div>
+  </div>
+
+  <button class="gen" id="gen-btn" onclick="generate()">✨ สร้างทริปด้วย AI</button>
+
+  <div class="tip"><b>💡 วิธีใช้ให้ได้ผลดีที่สุด:</b> เพิ่มสถานที่ส่วนตัวในช่อง "สถานที่พิเศษ" เช่น ร้านอาหารที่อยากลอง หรือวัดที่ต้องการไป — AI จะจัดโปรแกรมรวมให้ หากงบไม่พอ AI จะแนะนำว่าลดอะไรแล้วประหยัดเท่าไร</div>
+</aside>
+
+<!-- ═══════ RIGHT ═══════ -->
+<main class="res">
+  <div class="empty" id="empty-state">
+    <div class="empty-ico">🗺️</div>
+    <div class="empty-t">เริ่มออกแบบทริปทางซ้ายเลย</div>
+    <div class="empty-d">เลือกประเทศ เมือง งบ และสไตล์<br>AI จะสร้างโปรแกรมทริปพร้อมราคาจริงให้</div>
+  </div>
+  <div class="loading" id="loading">
+    <div class="lp">✈️</div>
+    <div class="lt" id="lt">กำลังวางแผนทริปให้คุณ...</div>
+    <div class="ls" id="ls">AI กำลังค้นหาข้อมูลสถานที่และราคา</div>
+    <div class="lb"><div class="lf"></div></div>
+  </div>
+  <div class="errbox" id="errbox"></div>
+  <div class="rc" id="rc"></div>
+</main>
+</div>
+
+<script>
+// ── DATA ──
+const C = {
+  japan:{name:'ญี่ปุ่น',flag:'🇯🇵',
+    cities:[{id:'tokyo',n:'Tokyo',e:'🗼'},{id:'kyoto',n:'Kyoto',e:'⛩️'},{id:'osaka',n:'Osaka',e:'🏯'},{id:'sapporo',n:'Sapporo',e:'❄️'},{id:'hiroshima',n:'Hiroshima',e:'🕊️'},{id:'nara',n:'Nara',e:'🦌'},{id:'hakone',n:'Hakone',e:'🌋'},{id:'fukuoka',n:'Fukuoka',e:'🍜'}],
+    flight:14000,hotel:{3:1200,4:2500,5:6000},transport:1200,food:{n:1000,l:2800},attr:600,
+    flightLow:9000,flightNote:'Thai AirAsia, Scoot จากสุวรรณภูมิ'},
+  korea:{name:'เกาหลีใต้',flag:'🇰🇷',
+    cities:[{id:'seoul',n:'Seoul',e:'🏙️'},{id:'busan',n:'Busan',e:'🌊'},{id:'jeju',n:'Jeju',e:'🌋'},{id:'gyeongju',n:'Gyeongju',e:'🏺'}],
+    flight:11000,hotel:{3:1000,4:2000,5:5000},transport:800,food:{n:700,l:2000},attr:500,
+    flightLow:7000,flightNote:'Thai AirAsia, Jin Air, T\'way Air'},
+  europe:{name:'ยุโรป',flag:'🇪🇺',
+    cities:[{id:'paris',n:'Paris',e:'🗼'},{id:'rome',n:'Rome',e:'🏛️'},{id:'amsterdam',n:'Amsterdam',e:'🚲'},{id:'barcelona',n:'Barcelona',e:'🎨'},{id:'prague',n:'Prague',e:'🏰'},{id:'london',n:'London',e:'🎡'}],
+    flight:35000,hotel:{3:2500,4:5500,5:12000},transport:2000,food:{n:1500,l:4000},attr:1000,
+    flightLow:22000,flightNote:'Qatar Airways, Emirates ผ่าน transit'},
+  taiwan:{name:'ไต้หวัน',flag:'🇹🇼',
+    cities:[{id:'taipei',n:'Taipei',e:'🏙️'},{id:'jiufen',n:'Jiufen',e:'🏮'},{id:'tainan',n:'Tainan',e:'🏯'},{id:'taroko',n:'Taroko',e:'🏔️'}],
+    flight:9000,hotel:{3:900,4:1800,5:4000},transport:700,food:{n:600,l:1500},attr:400,
+    flightLow:6000,flightNote:'Thai AirAsia, Eva Air'},
+  singapore:{name:'สิงคโปร์',flag:'🇸🇬',
+    cities:[{id:'sg',n:'Singapore City',e:'🦁'},{id:'sentosa',n:'Sentosa',e:'🏖️'}],
+    flight:6000,hotel:{3:2200,4:4500,5:10000},transport:500,food:{n:1200,l:3000},attr:800,
+    flightLow:4000,flightNote:'Scoot, Thai AirAsia X'},
+  thailand:{name:'ไทย',flag:'🇹🇭',
+    cities:[{id:'bkk',n:'Bangkok',e:'🏙️'},{id:'cnx',n:'เชียงใหม่',e:'🌿'},{id:'hkt',n:'ภูเก็ต',e:'🌊'},{id:'krabi',n:'กระบี่',e:'🤿'},{id:'samui',n:'เกาะสมุย',e:'🌴'},{id:'pai',n:'ปาย',e:'🌄'}],
+    flight:2500,hotel:{3:800,4:1800,5:4500},transport:600,food:{n:500,l:1500},attr:400,
+    flightLow:1500,flightNote:'Nok Air, Lion Air ในประเทศ'}
+};
+
+// Curated spots by style + country
+const SP = {
+  temple:{
+    japan:[{n:'Fushimi Inari Taisha',note:'หมื่นโทริอิ Kyoto – ไปเช้ามืดคนไม่แน่น'},{n:'Senso-ji Asakusa',note:'วัดเก่าแก่ Tokyo – ร้านขายของรอบวัด'},{n:'Kinkaku-ji (วัดทอง)',note:'Kyoto – ถ่ายรูปตอนเช้าแสงดี'},{n:'Todai-ji Nara',note:'พระพุทธรูปบรอนซ์ใหญ่ที่สุดในญี่ปุ่น'}],
+    korea:[{n:'Bulguksa Temple',note:'Gyeongju – มรดกโลก UNESCO'},{n:'Jogyesa Temple',note:'ใจกลาง Seoul – งานเทศกาลโคมไฟ'},{n:'Beomeosa Temple',note:'Busan – วัดบนภูเขา บรรยากาศสงบ'},{n:'Bongeunsa Gangnam',note:'ตรงข้าม COEX Seoul'}],
+    europe:[{n:'Sagrada Família',note:'Barcelona – จองล่วงหน้าออนไลน์'},{n:'Notre-Dame de Paris',note:'กำลังบูรณะ เปิด 2024'},{n:"St. Peter's Basilica",note:'Vatican – ฟรีเข้าชม'},{n:'Westminster Abbey',note:'London – ฝังพระมหากษัตริย์'}],
+    taiwan:[{n:'Longshan Temple',note:'Taipei – วัดที่มีชีวิต มีผู้คนมาไหว้ตลอด'},{n:'Xingtian Temple',note:'Taipei – ขอพรเรื่องธุรกิจ'},{n:'Wenwu Temple Sun Moon Lake',note:'ริมทะเลสาบ วิวสวย'}],
+    singapore:[{n:'Sri Mariamman Temple',note:'Chinatown – วัดฮินดูเก่าแก่'},{n:'Buddha Tooth Relic Temple',note:'Chinatown – ฟรี เข้าชมทุกวัน'},{n:'Sultan Mosque',note:'Kampong Glam – มัสยิดสวยงาม'}],
+    thailand:[{n:'วัดพระแก้ว',note:'Bangkok – ต้องแต่งกายสุภาพ'},{n:'วัดพระธาตุดอยสุเทพ',note:'เชียงใหม่ – ขึ้นรถสองแถวจากตัวเมือง'},{n:'วัดร่องขุ่น (วัดขาว)',note:'เชียงราย – สถาปัตยกรรมร่วมสมัย'},{n:'วัดมหาธาตุ Ayutthaya',note:'พระพุทธรูปในรากไม้'}]
+  },
+  food:{
+    japan:[{n:'Tsukiji Outer Market',note:'Tokyo – อาหารทะเลสด กุ้งย่าง scallop'},{n:'Dotonbori',note:'Osaka – ย่านอาหารชื่อดัง ตลอด 24 ชม.'},{n:'Nishiki Market Kyoto',note:'ตลาดแคบ อาหาร local Kyoto'},{n:'Kuromon Ichiba',note:'Osaka – อาหารทะเลสด ราคาดี'}],
+    korea:[{n:'Gwangjang Market Seoul',note:'ตลาดอาหารเก่าแก่ – bindaetteok เผ็ดๆ'},{n:'Jagalchi Fish Market',note:'Busan – กุ้งมังกร ปลาสด'},{n:'Myeongdong Night Market',note:'Seoul – street food หลากหลาย'},{n:'Tongin Market',note:'Seoul – กินแบบโบราณใช้ดินสอแทนเงิน'}],
+    europe:[{n:'Borough Market London',note:'ตลาดอาหาร artisan เปิดพฤ-เสาร์'},{n:'La Boqueria Barcelona',note:'ตลาดสด ผลไม้ freshly cut'},{n:'Mercato Centrale Florence',note:'อาหารอิตาเลียนทุกประเภท'},{n:'Marché d\'Aligre Paris',note:'ตลาดท้องถิ่นราคาถูก'}],
+    taiwan:[{n:'Shilin Night Market',note:'Taipei – ใหญ่สุด กิน oyster omelette'},{n:'Raohe Night Market',note:'ไม่แออัดเท่า Shilin – black pepper bun'},{n:'Din Tai Fung',note:'ซาลาเปาน้ำแดงตำนาน'}],
+    singapore:[{n:'Newton Food Centre',note:'Hawker classic – fried hokkien mee'},{n:'Maxwell Food Centre',note:'Chinatown – Hainanese chicken rice ดัง'},{n:'Lau Pa Sat Satay Street',note:'กลางคืน – satay ควันพวย'}],
+    thailand:[{n:'Or Tor Kor Market',note:'Bangkok – ผลไม้สด อาหารหลากหลาย'},{n:'ตลาดวโรรส เชียงใหม่',note:'อาหารเหนือ ของป่า'},{n:'Walking Street Phuket',note:'อาหารทะเลสด'}]
+  },
+  cafe:{
+    japan:[{n:'%Arabica Kyoto',note:'ร้านกาแฟ iconic ริมแม่น้ำ Kamo'},{n:'Fuglen Tokyo',note:'Norwegian café ใน Yoyogi'},{n:'Bear Pond Espresso',note:'Shimokitazawa – Espresso เข้มข้น'},{n:'% Arabica Omotesando',note:'Tokyo – ดีไซน์สวยถ่ายรูปได้'}],
+    korea:[{n:'Ikseon-dong Hanok Village',note:'Seoul – คาเฟ่ในบ้านเกาหลีเก่า'},{n:'Anthracite Coffee Hongdae',note:'โรงงานเก่าแปลงเป็นคาเฟ่'},{n:'Fritz Coffee Mapo',note:'ดีไซน์ Scandinavian'}],
+    europe:[{n:'Angelina Paris',note:'Hot Chocolate ที่ดีที่สุดในโลก – ต่อแถว'},{n:'Caffè Florian Venice',note:'คาเฟ่เก่าแก่ที่สุดในโลก 1720'},{n:'The Attendant London',note:'คาเฟ่ในห้องน้ำสาธารณะเก่า'}],
+    taiwan:[{n:'Fong Da Coffee Taipei',note:'ร้านกาแฟเก่าแก่ 1956 ย่าน Zhongzheng'},{n:'VWI Coffee',note:'Third wave coffee ใน Da\'an'},{n:'Simple Kaffa',note:'World\'s 50 Best Coffee'}],
+    singapore:[{n:'Common Man Coffee Roasters',note:'Robertson Quay – brunch ดี'},{n:'Chye Seng Huat Hardware',note:'Lavender – คาเฟ่ industrial'},{n:'Atlas Bar',note:'Art Deco gin bar ใน Parkview'}],
+    thailand:[{n:'Ristr8to เชียงใหม่',note:'Barista champion ชื่อดัง'},{n:'Graph Café เชียงใหม่',note:'สวยงาม ถ่ายรูปสวย'},{n:'Roots Coffee Bangkok',note:'Third wave สาขาหลายแห่ง'}]
+  },
+  shopping:{
+    japan:[{n:'Shibuya & Harajuku',note:'แฟชั่น youth culture ทุกสไตล์'},{n:'Akihabara',note:'อิเล็กทรอนิกส์ Anime Figure'},{n:'Ginza',note:'Luxury brands'},{n:'Shimokitazawa',note:'Vintage Second-hand ราคาดี'}],
+    korea:[{n:'Myeongdong Seoul',note:'เครื่องสำอาง K-Beauty เต็มถนน'},{n:'Dongdaemun DDP',note:'ตลาดผ้า แฟชั่น เปิดดึก'},{n:'Coex Mall Gangnam',note:'ห้างใต้ดิน ห้องสมุด Starfield'},{n:'Insadong',note:'ของที่ระลึก ศิลปะเกาหลี'}],
+    europe:[{n:'Galeries Lafayette Paris',note:'ห้างหรูมีโดมกระจก'},{n:'Oxford Street London',note:'High street shopping'},{n:'Portobello Road Market',note:'Notting Hill – ของ vintage เสาร์'}],
+    taiwan:[{n:'Ximending',note:'Taipei – Harajuku ของไต้หวัน'},{n:'Xinyi District',note:'ห้างสรรพสินค้า luxury'},{n:'Zhongshan',note:'ร้านอิสระ designer local'}],
+    singapore:[{n:'Orchard Road',note:'ห้างยาวที่สุดในเอเชีย'},{n:'Haji Lane',note:'Kampong Glam – boutique เล็กๆ'},{n:'Bugis Street',note:'ของถูก vintage streetwear'}],
+    thailand:[{n:'Terminal 21 Bangkok',note:'ห้างธีมสนามบิน'},{n:'JJ Market จตุจักร',note:'ใหญ่สุดในโลก เสาร์-อาทิตย์'},{n:'ถนนคนเดินเชียงใหม่',note:'เสาร์-อาทิตย์ ของ handmade'}]
+  },
+  nature:{
+    japan:[{n:'Arashiyama Bamboo Grove',note:'Kyoto – ไปเช้า 6-7 โมง ก่อนคนแน่น'},{n:'Mt. Fuji + Kawaguchiko',note:'ดูฟูจิจาก 5th Station'},{n:'Nikko National Park',note:'น้ำตก ป่า ศาลเจ้า'}],
+    korea:[{n:'Bukhansan National Park',note:'Seoul – hiking ชั่วโมงเดียวถึงยอด'},{n:'Jeju Hallasan',note:'ภูเขาไฟดับ hiking หลายเส้นทาง'},{n:'Nami Island',note:'ต้นไม้สวย สี่ฤดู'}],
+    europe:[{n:'Cinque Terre',note:'Italy – หมู่บ้านสีสันริมทะเล'},{n:'Plitvice Lakes Croatia',note:'น้ำตกสีเขียวมรกต'},{n:'Swiss Alps',note:'Day trip จาก Zurich/Geneva'}],
+    taiwan:[{n:'Taroko Gorge',note:'หุบเขาหินอ่อน – รถบัสจาก Hualien'},{n:'Alishan Forest Railway',note:'รถไฟสายเมฆ ดูพระอาทิตย์ขึ้น'},{n:'Sun Moon Lake',note:'ทะเลสาบสวยที่สุดในไต้หวัน'}],
+    singapore:[{n:'Gardens by the Bay',note:'Supertree Grove – ฟรีตอนกลางวัน'},{n:'MacRitchie Reservoir',note:'Treetop Walk ป่าดงดิบ'},{n:'Sungei Buloh Wetland',note:'นกอพยพ ธรรมชาติ'}],
+    thailand:[{n:'Similan Islands',note:'ดำน้ำ ทัวร์จากภูเก็ต'},{n:'Railay Beach กระบี่',note:'เข้าได้ทางเรือเท่านั้น'},{n:'ดอยอินทนนท์เชียงใหม่',note:'ยอดดอยสูงสุดของไทย'}]
+  },
+  culture:{
+    japan:[{n:'teamLab Planets Tokyo',note:'Art digital immersive – จองล่วงหน้า'},{n:'Tokyo National Museum',note:'ศิลปะญี่ปุ่นโบราณ Ueno'},{n:'Gion Kyoto',note:'ย่านเกอิชา เดินชมตอนเย็น'}],
+    korea:[{n:'Gyeongbokgung Palace',note:'วังเก่าแก่ แต่งฮันบกฟรีเข้าได้'},{n:'National Folk Museum',note:'ข้างวังฟรีเข้าชม'},{n:'Bukchon Hanok Village',note:'บ้านเกาหลีดั้งเดิม ถ่ายรูปสวย'}],
+    europe:[{n:'Louvre Museum',note:'Paris – จองล่วงหน้าหลีกเลี่ยงแถว'},{n:'Colosseum Rome',note:'จองออนไลน์ก่อนเสมอ'},{n:'Rijksmuseum Amsterdam',note:'Rembrandt ของแท้'}],
+    taiwan:[{n:'National Palace Museum',note:'สมบัติจีนโบราณ 700,000 ชิ้น'},{n:'Jiufen Old Street',note:'แรงบันดาลใจ Spirited Away'},{n:'Dihua Street',note:'ย่านเก่าแก่ ตรุษจีน'}],
+    singapore:[{n:'Peranakan Museum',note:'วัฒนธรรม Straits Chinese ไม่เหมือนใคร'},{n:'Chinatown Heritage Centre',note:'ประวัติผู้อพยพจีน'},{n:'Kampong Glam Malay Heritage',note:'วัฒนธรรมมาเลย์'}],
+    thailand:[{n:'พิพิธภัณฑสถานแห่งชาติ Bangkok',note:'ศิลปะไทยโบราณ'},{n:'เมืองเก่า Ayutthaya',note:'รถจักรยานเช่าชมโบราณสถาน'},{n:'เชียงแสน',note:'เมืองเก่า Golden Triangle'}]
+  },
+  luxury:[],
+  adventure:{
+    japan:[{n:'Mt. Fuji Climb',note:'เปิดฤดู ก.ค.-ก.ย. เท่านั้น ต้องจ่าย conservation fee'},{n:'Skiing Niseko/Hakuba',note:'ฤดูหนาว ธ.ค.-มี.ค.'},{n:'Kayaking Iriomote Island',note:'เกาะห่างไกล ป่าแมงโกรฟ'}],
+    korea:[{n:'Seoraksan Hiking',note:'Gangwon – ใบไม้เปลี่ยนสี ต.ค.'},{n:'Jeju Olle Trail',note:'เดินรอบเกาะ 437km แบ่งเป็น section'},{n:'Paragliding Yangpyeong',note:'2 ชม. จาก Seoul'}],
+    europe:[{n:'Tour du Mont Blanc',note:'11 วัน เดินป่า France-Italy-Swiss'},{n:'Via Ferrata Dolomites',note:'Italy – ปีนหน้าผา beginner friendly'},{n:'Northern Lights Tromsø',note:'Norway – ต.ค.-มี.ค.'}],
+    taiwan:[{n:'Taroko Gorge Trek',note:'หุบเขาลึก ปีนหน้าผา'},{n:'SUP Sun Moon Lake',note:'Paddle boarding ทะเลสาบ'},{n:'Scuba Kenting',note:'ดำน้ำดูปลา coral reef'}],
+    singapore:[{n:'Sentosa Adventure Cove',note:'Waterpark + snorkel'},{n:'AJ Hackett Bungy',note:'Sentosa – 50m bungy jump'},{n:'Pulau Ubin Cycling',note:'เกาะธรรมชาติ จักรยานรอบเกาะ'}],
+    thailand:[{n:'ดำน้ำ Richelieu Rock',note:'Similan – จุดดำน้ำ top10 โลก'},{n:'Zip Line Flight of the Gibbon',note:'เชียงใหม่ – 37 platforms'},{n:'Rock Climbing Railay',note:'กระบี่ – beginner ถึง pro'}]
+  }
+};
+
+const S={country:null,cities:[],customs:[],days:null,budget:50000,grade:null,styles:[]};
+
+function selC(el,key){
+  document.querySelectorAll('.cb').forEach(b=>b.classList.remove('sel'));
+  el.classList.add('sel');
+  S.country=key; S.cities=[]; S.customs=[];
+  renderCities(key);
+  document.getElementById('custom-sec').style.display='block';
+  document.getElementById('ctags').innerHTML='';
+  document.getElementById('custom-inp').value='';
+  updateBdg(S.budget);
+  renderSpotPreview();
+}
+
+function renderCities(key){
+  const sec=document.getElementById('city-sec');
+  const cont=document.getElementById('city-chips');
+  const d=C[key];
+  if(!d){sec.style.display='none';return;}
+  cont.innerHTML=d.cities.map(c=>`<div class="chip" onclick="togCity(this,'${c.id}')">${c.e} ${c.n}</div>`).join('');
+  sec.style.display='block';
+}
+function togCity(el,id){
+  el.classList.toggle('sel');
+  if(el.classList.contains('sel')) S.cities.push(id);
+  else S.cities=S.cities.filter(c=>c!==id);
+  updateBdg(S.budget);
+}
+
+function addCustom(){
+  const inp=document.getElementById('custom-inp');
+  const v=inp.value.trim();
+  if(!v) return;
+  if(S.customs.includes(v)) return;
+  S.customs.push(v);
+  inp.value='';
+  renderCtags();
+}
+document.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('custom-inp').addEventListener('keydown',e=>{if(e.key==='Enter')addCustom();});
+});
+function removeC(i){S.customs.splice(i,1);renderCtags();}
+function renderCtags(){
+  document.getElementById('ctags').innerHTML=S.customs.map((p,i)=>
+    `<div class="ctag">${p}<span class="rm" onclick="removeC(${i})">✕</span></div>`
+  ).join('');
+}
+
+function selD(el,d){
+  document.querySelectorAll('.db').forEach(b=>b.classList.remove('sel'));
+  el.classList.add('sel'); S.days=d;
+  updateBdg(S.budget);
+}
+
+function selG(el,g){
+  document.querySelectorAll('.gb').forEach(b=>b.classList.remove('sel'));
+  el.classList.add('sel'); S.grade=g;
+  updateBdg(S.budget);
+}
+
+function togS(el,s){
+  el.classList.toggle('sel');
+  if(el.classList.contains('sel')) S.styles.push(s);
+  else S.styles=S.styles.filter(x=>x!==s);
+  renderSpotPreview();
+  updateBdg(S.budget);
+}
+
+// ── SPOT PREVIEW (instant, by style+country) ──
+function renderSpotPreview(){
+  const prev=document.getElementById('spot-preview');
+  const grid=document.getElementById('sp-grid');
+  if(!S.country||S.styles.length===0){prev.className='spot-preview';return;}
+  const cats=[];
+  S.styles.forEach(st=>{
+    const spots=(SP[st]||{})[S.country];
+    if(spots&&spots.length>0){
+      const styleName={food:'🍜 อาหาร/ตลาด',cafe:'☕ คาเฟ่',temple:'⛩️ วัด/ศาสนสถาน',nature:'🌿 ธรรมชาติ',shopping:'🛍️ ช้อปปิ้ง',culture:'🏛️ วัฒนธรรม',luxury:'💎 Luxury',adventure:'🏔️ Adventure'}[st]||st;
+      cats.push({name:styleName,spots:spots.slice(0,4)});
+    }
+  });
+  if(cats.length===0){prev.className='spot-preview';return;}
+  prev.className='spot-preview show';
+  grid.innerHTML=cats.map(cat=>`
+    <div class="sp-cat">
+      <div class="sp-cat-name">${cat.name}</div>
+      <div class="sp-items">
+        ${cat.spots.map(sp=>`<div class="sp-item"><span class="sp-item-dot">▸</span><div><div>${sp.n}</div><div class="sp-item-note">${sp.note}</div></div></div>`).join('')}
+      </div>
+    </div>`).join('');
+}
+
+// ── REAL PRICE ESTIMATE ──
+function calcCosts(country,days,grade,styles,numCities){
+  const d=C[country]; if(!d) return null;
+  const flight=d.flight;
+  const hotel=d.hotel[grade]*(days-1);
+  const transport=Math.round(d.transport*days + (numCities>1?(numCities-1)*3000:0));
+  const isLux=styles.includes('luxury');
+  const food=Math.round((isLux?d.food.l:d.food.n)*days);
+  const attr=Math.round(d.attr*days);
+  const misc=styles.includes('shopping')?(grade>=4?6000:3000):(grade>=4?2000:1000);
+  return {flight,hotel,transport,food,attraction:attr,misc};
+}
+
+function updateBdg(v){
+  S.budget=parseInt(v);
+  document.getElementById('bdg-num').textContent=parseInt(v).toLocaleString();
+  // tier
+  const tiers=[[15000,30000,'ประหยัด','rgba(106,180,255,.12)','rgba(106,180,255,.25)','var(--accent)'],[30001,55000,'ระดับกลาง','rgba(93,203,163,.12)','rgba(93,203,163,.25)','var(--green)'],[55001,100000,'Comfort','rgba(232,201,122,.12)','rgba(232,201,122,.25)','var(--gold)'],[100001,999999,'Luxury','rgba(160,122,240,.12)','rgba(160,122,240,.3)','var(--purple)']];
+  const t=tiers.find(x=>v>=x[0]&&v<=x[1])||tiers[1];
+  const tb=document.getElementById('bdg-tier');
+  tb.textContent=t[2];
+  tb.style.background=t[3]; tb.style.border=`1px solid ${t[4]}`; tb.style.color=t[5];
+
+  // Breakdown
+  if(S.country&&S.days&&S.grade){
+    const numCities=Math.max(S.cities.length,1);
+    const costs=calcCosts(S.country,S.days,S.grade,S.styles,numCities);
+    if(costs){
+      const total=Object.values(costs).reduce((a,b)=>a+b,0);
+      document.getElementById('bdg-breakdown').style.display='block';
+      const rows=document.getElementById('bdg-rows');
+      const labels={flight:'✈️ ตั๋ว',hotel:'🏨 โรงแรม',transport:'🚆 เดินทาง',food:'🍜 อาหาร',attraction:'🎡 สถานที่',misc:'🛍️ ช้อป'};
+      rows.innerHTML=Object.entries(costs).map(([k,v2])=>`
+        <div class="bdg-row"><span class="bdg-row-l">${labels[k]||k}</span><span class="bdg-row-r">${v2.toLocaleString()}฿</span></div>`
+      ).join('');
+      // Alert
+      const alert=document.getElementById('bdg-alert');
+      if(total>S.budget){
+        const over=total-S.budget;
+        alert.classList.add('show');
+        document.getElementById('bdg-alert-msg').innerHTML=
+          `⚠️ งบ <b style="color:var(--red)">${S.budget.toLocaleString()}</b> บาท อาจไม่พอ ประมาณจะใช้ <b>${total.toLocaleString()}</b> บาท (เกิน ${over.toLocaleString()} บาท)`;
+        // Inline suggestions
+        const sugs=buildSugs(total,S.budget);
+        document.getElementById('bdg-sugs-inline').innerHTML=sugs.slice(0,3).map((s,i)=>`
+          <div class="bsi">
+            <div class="bsi-l">${s.action}</div>
+            <div style="display:flex;gap:6px;align-items:center;">
+              <span class="bsi-save">-${s.save.toLocaleString()}฿</span>
+              ${s.apply?`<span class="bsi-apply" onclick="window._bsugs[${i}].apply();updateBdg(S.budget)">ใช้</span>`:''}
+            </div>
+          </div>`).join('');
+        window._bsugs=sugs;
+      } else {
+        alert.classList.remove('show');
+      }
+    }
+  } else {
+    document.getElementById('bdg-breakdown').style.display='none';
+    document.getElementById('bdg-alert').classList.remove('show');
+  }
+}
+
+function buildSugs(total,budget){
+  if(!S.country) return [];
+  const d=C[S.country];
+  const sugs=[];
+  // Lower hotel
+  if(S.grade>3){
+    const lg=S.grade-1;
+    const save=(d.hotel[S.grade]-d.hotel[lg])*((S.days||7)-1);
+    sugs.push({action:`ลดเกรดโรงแรมเป็น ${lg} ดาว`,save,apply:()=>{
+      document.querySelectorAll('.gb').forEach(b=>b.classList.remove('sel'));
+      const gbs=document.querySelectorAll('.gb');
+      gbs[lg-3].classList.add('sel'); S.grade=lg;
+    }});
+  }
+  // Fewer days
+  if(S.days>5){
+    const ld=S.days-2;
+    const perDay=total/S.days;
+    sugs.push({action:`ลดทริปเหลือ ${ld} วัน`,save:Math.round(perDay*2),apply:()=>{
+      document.querySelectorAll('.db').forEach(b=>b.classList.remove('sel'));
+      const dbs=document.querySelectorAll('.db');
+      const m={5:0,7:1,10:2,14:3};
+      if(m[ld]!==undefined) dbs[m[ld]].classList.add('sel');
+      S.days=ld;
+    }});
+  }
+  // Budget airline
+  if(d.flight>10000){
+    sugs.push({action:`จอง Low-cost airline (${d.flightNote})`,save:d.flight-d.flightLow,apply:null});
+  }
+  // Remove luxury
+  if(S.styles.includes('luxury')){
+    const fd=d.food;
+    sugs.push({action:`ปรับจาก Luxury dining เป็น Casual`,save:Math.round((fd.l-fd.n)*(S.days||7)),apply:()=>{
+      document.querySelectorAll('.stag').forEach(el=>{
+        if(el.getAttribute('onclick')?.includes("'luxury'")&&el.classList.contains('sel')){
+          el.classList.remove('sel');
+          S.styles=S.styles.filter(x=>x!=='luxury');
+        }
+      });
+    }});
+  }
+  return sugs.filter(s=>s.save>0).sort((a,b)=>b.save-a.save);
+}
+
+// ── GENERATE ──
+async function generate(){
+  if(!S.country) return alert('กรุณาเลือกปลายทาง');
+  if(!S.days) return alert('กรุณาเลือกจำนวนวัน');
+  if(!S.grade) return alert('กรุณาเลือกเกรดโรงแรม');
+  const cInfo=C[S.country];
+  const selCities=S.cities.length>0
+    ? S.cities.map(id=>cInfo.cities.find(c=>c.id===id)?.n).filter(Boolean)
+    : cInfo.cities.slice(0,Math.min(2,cInfo.cities.length)).map(c=>c.n);
+  const numCities=Math.max(selCities.length,1);
+  const estCosts=calcCosts(S.country,S.days,S.grade,S.styles,numCities);
+  const estTotal=Object.values(estCosts).reduce((a,b)=>a+b,0);
+
+  const styleMap={food:'อาหาร',cafe:'คาเฟ่',temple:'วัด/ศาสนสถาน',nature:'ธรรมชาติ',shopping:'ช้อปปิ้ง',culture:'วัฒนธรรม',luxury:'Luxury',adventure:'Adventure'};
+  const stylesText=S.styles.map(s=>styleMap[s]||s).join(', ')||'ท่องเที่ยวทั่วไป';
+
+  // Curated spots for prompt
+  const spotsForPrompt=[];
+  S.styles.forEach(st=>{
+    const spots=(SP[st]||{})[S.country];
+    if(spots) spotsForPrompt.push(...spots.slice(0,3).map(s=>s.n));
+  });
+
+  showLoading();
+
+  const customText=S.customs.length>0?`\nสถานที่ที่ลูกค้าเพิ่มเอง (ต้องรวมในโปรแกรม ทำ isCustom:true): ${S.customs.join(', ')}`:'';
+  const curatedText=spotsForPrompt.length>0?`\nสถานที่แนะนำตามสไตล์ (โปรดรวมไว้ด้วย): ${spotsForPrompt.slice(0,8).join(', ')}`:'';
+
+  const prompt=`คุณคือ AI Tour Designer ผู้เชี่ยวชาญวางแผนทริปสำหรับคนไทย ตอบกลับเป็น JSON เท่านั้น ห้ามมี markdown หรือ backtick
+
+ข้อมูลทริป:
+- ประเทศ: ${cInfo.name}
+- เมือง: ${selCities.join(', ')}
+- วัน: ${S.days} วัน
+- งบ: ${S.budget.toLocaleString()} บาท/คน (ประมาณการจริง: ${estTotal.toLocaleString()} บาท)
+- โรงแรม: ${S.grade} ดาว ราคา ~${cInfo.hotel[S.grade].toLocaleString()} บาท/คืน
+- สไตล์: ${stylesText}${customText}${curatedText}
+
+ค่าใช้จ่ายอ้างอิงจริง:
+- ตั๋วเครื่องบิน: ${estCosts.flight.toLocaleString()} บาท (low-cost: ${cInfo.flightLow.toLocaleString()} บาท via ${cInfo.flightNote})
+- โรงแรม: ${estCosts.hotel.toLocaleString()} บาท
+- เดินทาง: ${estCosts.transport.toLocaleString()} บาท
+- อาหาร: ${estCosts.food.toLocaleString()} บาท
+- สถานที่: ${estCosts.attraction.toLocaleString()} บาท
+- เบ็ดเตล็ด: ${estCosts.misc.toLocaleString()} บาท
+
+สร้าง JSON นี้:
+{
+  "tripTitle": "ชื่อทริปภาษาไทยสั้นๆ น่าสนใจ",
+  "summary": "สรุปทริป 2 ประโยค บอกไฮไลท์",
+  "costs": {
+    "flight": ${estCosts.flight},
+    "hotel": ${estCosts.hotel},
+    "transport": ${estCosts.transport},
+    "food": ${estCosts.food},
+    "attraction": ${estCosts.attraction},
+    "misc": ${estCosts.misc}
+  },
+  "flightNote": "ข้อมูลตั๋วสั้นๆ สายการบินที่แนะนำ ราคาประมาณ",
+  "styleSpots": [
+    {"category": "ชื่อหมวดหมู่พร้อม emoji", "spots": [{"name":"ชื่อสถานที่","note":"เหตุผลแนะนำสั้นๆ"}]}
+  ],
+  "days": [
+    {
+      "day": 1,
+      "city": "ชื่อเมือง",
+      "theme": "หัวข้อวันนี้สั้นๆ",
+      "hotel": {"name":"ชื่อโรงแรมจริงหรือใกล้เคียง","stars":${S.grade},"area":"ย่าน","pricePerNight":${cInfo.hotel[S.grade]},"highlight":"จุดเด่น 1 ประโยค"},
+      "activities": [
+        {"time":"09:00","type":"spot","name":"ชื่อสถานที่","desc":"รายละเอียด วิธีเดินทาง ใช้เวลานานเท่าไร","tip":"เคล็ดลับ local","isCustom":false},
+        {"time":"12:30","type":"food","name":"ร้าน/ย่านอาหาร","desc":"รายละเอียด","tip":"","isCustom":false}
+      ]
+    }
+  ]
+}
+
+สร้างครบ ${S.days} วัน แต่ละวันมี activities 4-6 รายการ วันแรกให้มีการเดินทาง (type:transport) วันสุดท้ายให้มีการเดินทางกลับ${S.customs.length>0?' รวม custom places ของลูกค้า':''}
+
+ตอบ JSON เท่านั้น ห้าม markdown`;
+
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:6000,messages:[{role:'user',content:prompt}]})
+    });
+    const data=await res.json();
+    if(!res.ok) throw new Error(data.error?.message||'API Error');
+    const raw=data.content?.[0]?.text||'';
+    let json;
+    try{json=JSON.parse(raw.replace(/```json|```/g,'').trim());}
+    catch(e){throw new Error('AI ตอบกลับในรูปแบบที่ไม่ถูกต้อง กรุณาลองใหม่');}
+    renderResult(json,cInfo,selCities,estCosts,estTotal);
+  }catch(err){showError(err.message);}
+}
+
+function showLoading(){
+  ['empty-state','rc','errbox'].forEach(id=>document.getElementById(id).style.display='none');
+  document.getElementById('loading').style.display='flex';
+  document.getElementById('gen-btn').disabled=true;
+  const msgs=[
+    ['กำลังวางแผนทริปให้คุณ...','AI กำลังค้นหาสถานที่และราคาจริง'],
+    ['กำลังจัดเส้นทางที่ดีที่สุด...','เรียงลำดับตามระยะทาง เวลาเปิดปิด'],
+    ['กำลังคำนวณงบประมาณ...','ตรวจสอบราคาโรงแรมและตั๋ว'],
+    ['เกือบเสร็จแล้ว ✨','เพิ่ม local tips และคำแนะนำพิเศษ']
+  ];
+  let i=0;
+  window._li=setInterval(()=>{
+    if(i<msgs.length){document.getElementById('lt').textContent=msgs[i][0];document.getElementById('ls').textContent=msgs[i][1];i++;}
+  },900);
+}
+
+function hideLoading(){
+  document.getElementById('loading').style.display='none';
+  clearInterval(window._li);
+  document.getElementById('gen-btn').disabled=false;
+}
+function showError(msg){
+  hideLoading();
+  const b=document.getElementById('errbox');
+  b.style.display='block';
+  b.innerHTML=`⚠️ ${msg}`;
+}
+
+function renderResult(data,cInfo,cities,estCosts,estTotal){
+  hideLoading();
+  const costs=data.costs||estCosts;
+  const total=Object.values(costs).reduce((a,b)=>a+(b||0),0);
+  const pct=Math.round((total/S.budget)*100);
+  const over=total>S.budget;
+  const overBy=total-S.budget;
+  const barColor=over?'var(--red)':pct>85?'var(--gold)':'var(--green)';
+
+  const costLabels={flight:{i:'✈️',l:'ตั๋วเครื่องบิน'},hotel:{i:'🏨',l:'โรงแรม'},transport:{i:'🚆',l:'เดินทางในประเทศ'},food:{i:'🍜',l:'อาหาร'},attraction:{i:'🎡',l:'ค่าเข้าสถานที่'},misc:{i:'🛍️',l:'ช้อปปิ้ง/เบ็ดเตล็ด'}};
+  const costRowsHTML=Object.entries(costs).map(([k,v])=>{
+    const inf=costLabels[k]||{i:'💸',l:k};
+    return `<div class="cr"><span class="cr-l">${inf.i} ${inf.l}</span><span class="cr-r">${(v||0).toLocaleString()} ฿</span></div>`;
+  }).join('');
+
+  // Smart suggestions for result
+  const sugs=buildSugs(total,S.budget);
+  let smartHTML='';
+  if(over&&sugs.length>0){
+    const items=sugs.slice(0,4).map((s,i)=>`
+      <div class="sug">
+        <div style="flex:1;"><div class="sug-a">${s.action}</div></div>
+        <div class="sug-r">
+          <span class="sug-save">-${s.save.toLocaleString()} ฿</span>
+          ${s.apply?`<span class="sug-btn" onclick="window._rsugs[${i}].apply();generate()">ปรับ+สร้างใหม่</span>`:''}
+        </div>
+      </div>`).join('');
+    smartHTML=`<div class="smart-box warn">
+      <div class="smart-hdr warn">⚠️ เกินงบ ${overBy.toLocaleString()} บาท — ตัวเลือกประหยัด</div>
+      <div class="sugs">${items}</div>
+    </div>`;
+    window._rsugs=sugs;
+  } else {
+    const saved=S.budget-total;
+    smartHTML=`<div class="smart-box ok">
+      <div class="smart-hdr ok">✅ อยู่ในงบ เหลือ ${saved.toLocaleString()} บาท</div>
+      <div style="font-size:11.5px;color:var(--muted);">นำไปช้อปปิ้ง อัปเกรดมื้ออาหาร หรือกิจกรรมพิเศษได้เลย</div>
+    </div>`;
+  }
+
+  // Flight note
+  const flightNoteHTML=data.flightNote?`
+    <div style="background:rgba(106,180,255,.07);border:1px solid rgba(106,180,255,.15);border-radius:9px;padding:10px 13px;margin-top:10px;font-size:11.5px;color:var(--accent);">
+      ✈️ ${data.flightNote}
+    </div>`:'';
+
+  // Style spots
+  let ssHTML='';
+  if(data.styleSpots&&data.styleSpots.length>0){
+    const cards=data.styleSpots.map(cat=>`
+      <div class="ss-card">
+        <div class="ss-cat">${cat.category||''}</div>
+        ${(cat.spots||[]).map(sp=>`<div class="ss-item"><span style="color:var(--gold2);flex-shrink:0;">▸</span><div><div>${sp.name||''}</div><div class="ss-note">${sp.note||''}</div></div></div>`).join('')}
+      </div>`).join('');
+    ssHTML=`<div class="ssbox">
+      <div class="ssbox-title">🎯 สถานที่แนะนำตามสไตล์ที่เลือก</div>
+      <div class="ss-grid">${cards}</div>
+    </div>`;
+  }
+
+  // Custom places
+  let csHTML='';
+  if(S.customs.length>0){
+    csHTML=`<div class="csbox">
+      <div class="csbox-t">📍 สถานที่ที่คุณเพิ่มเอง (รวมในโปรแกรมแล้ว)</div>
+      <div class="cslist">${S.customs.map(p=>`<div class="csitem">✦ ${p}</div>`).join('')}</div>
+    </div>`;
+  }
+
+  // Days
+  const daysHTML=(data.days||[]).map((day,idx)=>{
+    const hotelHTML=day.hotel?`<div class="hotel-card">
+      <div class="hotel-em">🏨</div>
+      <div style="flex:1;">
+        <div class="hotel-name">${day.hotel.name||''}</div>
+        <div class="hotel-st">${'⭐'.repeat(day.hotel.stars||S.grade)}</div>
+        <div class="hotel-meta">📍 ${day.hotel.area||''} · ${day.hotel.highlight||''}</div>
+      </div>
+      <div class="hotel-price"><div class="hotel-pnum">${(day.hotel.pricePerNight||0).toLocaleString()}฿</div><div class="hotel-plbl">/ คืน</div></div>
+    </div>`:'';
+
+    const actHTML=(day.activities||[]).map(act=>{
+      const dc=act.type==='hotel'?'hotel':act.type==='food'?'food':act.type==='transport'?'transport':act.isCustom?'custom':'';
+      const tc=act.type==='food'?'tt-food':act.type==='transport'?'tt-transport':act.type==='hotel'?'tt-hotel':act.isCustom?'tt-custom':'tt-spot';
+      const tl=act.type==='food'?'🍜 อาหาร':act.type==='transport'?'🚆 เดินทาง':act.type==='hotel'?'🏨 ที่พัก':act.isCustom?'📍 ของคุณ':'📍 สถานที่';
+      return `<div class="tl-item">
+        <div class="tl-dot ${dc}"></div>
+        <div class="tl-time">${act.time||''}</div>
+        <div class="tl-name">${act.name||''}${act.isCustom?' <span style="font-size:9.5px;color:var(--orange);background:rgba(255,159,107,.1);padding:1px 6px;border-radius:4px;margin-left:4px;">เพิ่มเอง</span>':''}</div>
+        <div class="tl-desc">${act.desc||''}</div>
+        ${act.tip?`<div class="tl-tip">💡 ${act.tip}</div>`:''}
+        <div class="tl-tags"><span class="tt ${tc}">${tl}</span></div>
+      </div>`;
+    }).join('');
+
+    return `<div class="day-card">
+      <div class=
